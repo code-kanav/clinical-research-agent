@@ -11,7 +11,7 @@ _PROMPTS_DIR = Path(__file__).parent / "prompts"
 # 10 LLM calls/min = 1 per 6 s; shared across all agents.
 _llm_rate_lock = Lock()
 _llm_rate_last: float = 0.0
-_LLM_MIN_INTERVAL = 6.0  # seconds
+_LLM_MIN_INTERVAL = 0.0  # no rate limiting
 
 
 def llm_wait() -> None:
