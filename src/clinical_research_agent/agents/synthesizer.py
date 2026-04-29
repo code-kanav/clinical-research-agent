@@ -53,8 +53,18 @@ def run_synthesizer(state: ResearchState) -> dict:
             review = str(data.get("review") or content)
             citations: list[str] = list(data.get("references") or [])
         except Exception:
-            review = content
-            citations = _extract_references_from_text(content)
+            # Strip any ```json...``` fence before falling back to raw text.
+            import re as _re
+            m = _re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", content)
+            raw = m.group(1).strip() if m else content
+            try:
+                import json as _json
+                data2 = _json.loads(raw)
+                review = str(data2.get("review") or raw)
+                citations = list(data2.get("references") or [])
+            except Exception:
+                review = raw
+                citations = _extract_references_from_text(raw)
     except Exception as exc:
         review = (
             f"Synthesis failed: {exc}\n\n"

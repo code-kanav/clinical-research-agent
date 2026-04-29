@@ -15,7 +15,9 @@ from pathlib import Path
 import yaml
 
 # Allow running as a script without installing
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+_root = Path(__file__).parent.parent
+sys.path.insert(0, str(_root / "src"))
+sys.path.insert(0, str(_root))  # needed for `from evals.metrics import ...`
 
 from clinical_research_agent.config import get_settings
 from clinical_research_agent.graph import graph
