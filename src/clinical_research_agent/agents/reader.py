@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from langchain_core.messages import HumanMessage
 
-from clinical_research_agent._utils import format_prompt, load_prompt, parse_json_response
+from clinical_research_agent._utils import format_prompt, llm_wait, load_prompt, parse_json_response
 from clinical_research_agent.config import get_llm, get_settings
 from clinical_research_agent.state import ResearchState
 
-MAX_PAPERS = 20
+MAX_PAPERS = 5  # cap LLM calls: 1 per paper
 
 _prompt_template: str | None = None
 
@@ -66,6 +66,7 @@ def _extract_claims(llm: object, paper: dict, debug: bool = False) -> tuple[list
     )
 
     try:
+        llm_wait()
         response = llm.invoke([HumanMessage(content=prompt)])  # type: ignore[union-attr]
         usage = getattr(response, "usage_metadata", None) or {}
         itok = int(usage.get("input_tokens", 0))

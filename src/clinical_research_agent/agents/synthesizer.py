@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from langchain_core.messages import HumanMessage
 
-from clinical_research_agent._utils import format_prompt, load_prompt, parse_json_response
+from clinical_research_agent._utils import format_prompt, llm_wait, load_prompt, parse_json_response
 from clinical_research_agent.config import get_llm, get_settings
 from clinical_research_agent.state import ResearchState
 
@@ -42,6 +42,7 @@ def run_synthesizer(state: ResearchState) -> dict:
 
     itok = otok = 0
     try:
+        llm_wait()
         response = llm.invoke([HumanMessage(content=prompt)])  # type: ignore[union-attr]
         usage = getattr(response, "usage_metadata", None) or {}
         itok = int(usage.get("input_tokens", 0))

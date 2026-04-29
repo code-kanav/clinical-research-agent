@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from langchain_core.messages import HumanMessage
 
-from clinical_research_agent._utils import format_prompt, load_prompt, parse_json_response
+from clinical_research_agent._utils import format_prompt, llm_wait, load_prompt, parse_json_response
 from clinical_research_agent.config import get_llm, get_settings
 from clinical_research_agent.state import ResearchState
 from clinical_research_agent.tools.arxiv import search_arxiv
 from clinical_research_agent.tools.pubmed import search_pubmed
 from clinical_research_agent.tools.semantic_scholar import search_semantic_scholar
 
-MAX_REACT_ITERATIONS = 3
+MAX_REACT_ITERATIONS = 1  # skip LLM eval; accept first results to minimise API calls
 
 _prompt_template: str | None = None
 _search_tokens: dict[str, int] = {"input": 0, "output": 0}  # reset each run_search call
@@ -114,6 +114,7 @@ def _evaluate(llm: object, original_query: str, current_query: str, papers: list
         paper_summary=summary,
     )
     try:
+        llm_wait()
         response = llm.invoke([HumanMessage(content=prompt)])  # type: ignore[union-attr]
         usage = getattr(response, "usage_metadata", None) or {}
         _search_tokens["input"] += int(usage.get("input_tokens", 0))

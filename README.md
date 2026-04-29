@@ -7,14 +7,19 @@ This project implements a multi-agent clinical literature research system that d
 ## Demo
 
 ```bash
-pip install -e .
+# 1. Install
+pip install -e ".[vertex]"
 
-# Recommended: use the installed entry point
-clinical-research "What is the current evidence on GLP-1 agonists for non-diabetic weight management?"
-clinical-research --debug "What is the current evidence on GLP-1 agonists for non-diabetic weight management?"
+# 2. Auth (one-time)
+gcloud auth application-default login
+gcloud config set project clinical-research-agent-494807
 
-# Or invoke directly (requires python3, not python)
+# 3. Run
 python3 cli.py "What is the current evidence on GLP-1 agonists for non-diabetic weight management?"
+python3 cli.py --debug "What is the current evidence on GLP-1 agonists for non-diabetic weight management?"
+
+# Or via installed entry point (add Python bin dir to PATH first — see below)
+clinical-research --debug "your question"
 ```
 
 > **macOS note:** if `clinical-research` is not found after install, add the Python bin dir to PATH:
@@ -78,7 +83,7 @@ clinical-research-agent/
   .env.example                    all configurable env vars
   src/clinical_research_agent/
     state.py                      ResearchState TypedDict + Pydantic sub-models
-    config.py                     swappable LLM client (Anthropic default, Vertex stub)
+    config.py                     swappable LLM client (Vertex AI default; Gemini/Anthropic supported)
     graph.py                      LangGraph StateGraph wiring
     _utils.py                     prompt loader, JSON-safe formatter, response parser
     agents/                       one file per agent
@@ -100,18 +105,29 @@ clinical-research-agent/
 ## Quick Start
 
 ```bash
-# Install
-git clone <repo>
+# 1. Clone and install
+git clone https://github.com/code-kanav/clinical-research-agent
 cd clinical-research-agent
-pip install -e ".[dev]"
+pip install -e ".[vertex,dev]"
+
+# 2. Configure .env
 cp .env.example .env
-# Edit .env: set ANTHROPIC_API_KEY at minimum
+# Set in .env:
+#   GCP_PROJECT_ID=your-gcp-project
+#   GCP_LOCATION=us-central1       (default)
+#   NCBI_API_KEY=...               (optional, raises PubMed rate limit)
+#   SEMANTIC_SCHOLAR_API_KEY=...   (optional)
 
-# Run (entry point, available after pip install -e .)
-clinical-research "What is the evidence for GLP-1 agonists in non-diabetic weight management?"
-clinical-research --debug "your question"
+# 3. Auth — one-time gcloud setup
+brew install --cask google-cloud-sdk   # if not installed
+gcloud auth login
+gcloud config set project YOUR_GCP_PROJECT
+gcloud auth application-default login
+# Vertex AI requires a billing-enabled GCP project
 
-# Or: python3 cli.py "your question"
+# 4. Run
+python3 cli.py "What is the evidence for GLP-1 agonists in non-diabetic weight management?"
+python3 cli.py --debug "your question"
 
 # Tests (unit only, no network)
 pytest tests/
@@ -124,16 +140,25 @@ pytest tests/ --integration
 
 ## Model Provider
 
-Default is Anthropic Claude. Swap to Vertex AI / Gemini by setting `LLM_PROVIDER=vertexai` in `.env`
-and installing the optional dependency group:
+Default provider is **Vertex AI** (`gemini-2.5-flash`) via Application Default Credentials.
+All agents call `get_llm()` which returns a `langchain_core.BaseChatModel` — swap provider
+by changing `LLM_PROVIDER` in `.env`:
 
+| `LLM_PROVIDER` | Auth | Required env vars | Install extras |
+|---|---|---|---|
+| `vertex` *(default)* | ADC (`gcloud auth application-default login`) | `GCP_PROJECT_ID`, `GCP_LOCATION` | `.[vertex]` |
+| `gemini` | API key | `GOOGLE_API_KEY` | `.[gemini]` |
+| `anthropic` | API key | `ANTHROPIC_API_KEY` | *(included)* |
+
+**Vertex AI setup** (one-time):
 ```bash
 pip install -e ".[vertex]"
+gcloud auth application-default login
+# Set GCP_PROJECT_ID in .env — project must have billing enabled
 ```
 
-A `VertexAIClient` is scaffolded in `config.py` and raises `ValueError` with a clear message
-until `VERTEX_PROJECT_ID` and `VERTEX_LOCATION` are set. The rest of the codebase is
-provider-agnostic — all agents call `get_llm()` which returns a `langchain_core.BaseChatModel`.
+A built-in LLM rate limiter enforces a configurable call gap (default 6 s = 10 req/min)
+across all agents, preventing quota exhaustion on free-tier projects.
 
 ---
 
@@ -169,8 +194,8 @@ python evals/run.py --skip-faithfulness  # skip LLM judge (faster)
 | **Token cost** | `(input_tokens × in_rate + output_tokens × out_rate)` using published 2025-Q2 pricing; tokens accumulated in `ResearchState` across all nodes |
 | **Latency** | Wall-clock time per full graph invocation |
 
-Judge calls use `JUDGE_MODEL` (default: `claude-haiku-4-5-20251001`) — a smaller, cheaper model
-since faithfulness scoring is a more constrained task than synthesis.
+Judge calls use the same provider as the main LLM. With Vertex AI, it uses `gemini-2.5-flash`
+by default — set `JUDGE_MODEL` in `.env` to override.
 
 ### Last Run
 

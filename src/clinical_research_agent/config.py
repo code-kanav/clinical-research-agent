@@ -14,22 +14,22 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # Provider selection: "anthropic" | "gemini" | "vertexai"
-    llm_provider: Literal["anthropic", "gemini", "vertexai"] = "anthropic"
+    # Provider selection: "anthropic" | "gemini" | "vertex"
+    llm_provider: Literal["anthropic", "gemini", "vertex"] = "vertex"
 
     # Anthropic
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-4-6"
 
-    # Google Gemini API (AI Studio key — AIzaSy...)
+    # Google Gemini AI Studio (legacy — use vertex instead)
     google_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash-lite"
-    gemini_judge_model: str = "gemini-2.5-flash-lite"  # cheaper model for eval judge calls
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_judge_model: str = "gemini-2.5-flash"
 
-    # Vertex AI (optional — requires `pip install 'clinical-research-agent[vertex]'`)
-    vertex_project_id: str = ""
-    vertex_location: str = "us-central1"
-    vertex_model: str = "gemini-1.5-pro"
+    # Vertex AI — auth via ADC (~/.config/gcloud/application_default_credentials.json)
+    gcp_project_id: str = ""
+    gcp_location: str = "us-central1"
+    gcp_model: str = "gemini-2.5-flash"
 
     # Search APIs
     ncbi_api_key: str = ""
@@ -52,9 +52,7 @@ class Settings(BaseSettings):
     def effective_judge_model(self) -> str:
         if self.judge_model:
             return self.judge_model
-        if self.llm_provider == "gemini":
-            return self.gemini_judge_model
-        return "claude-haiku-4-5-20251001"
+        return self.gcp_model if self.llm_provider == "vertex" else self.gemini_judge_model
 
 
 @lru_cache(maxsize=1)
@@ -65,18 +63,21 @@ def get_settings() -> Settings:
 def get_llm(settings: Settings | None = None) -> BaseChatModel:
     """Return a LangChain BaseChatModel for the configured provider.
 
-    All agents call this — swap provider via LLM_PROVIDER in .env.
-    Anthropic and Gemini are fully working implementations.
-    Vertex AI is scaffolded (set VERTEX_PROJECT_ID to enable).
+    vertex  — ChatVertexAI via ADC; set GCP_PROJECT_ID + GCP_LOCATION in .env.
+    gemini  — ChatGoogleGenerativeAI via AI Studio API key (legacy).
+    anthropic — ChatAnthropic via API key.
     """
     if settings is None:
         settings = get_settings()
 
-    if settings.llm_provider == "anthropic":
-        from langchain_anthropic import ChatAnthropic
-        return ChatAnthropic(
-            model=settings.anthropic_model,
-            api_key=settings.anthropic_api_key,  # type: ignore[arg-type]
+    if settings.llm_provider == "vertex":
+        from langchain_google_vertexai import ChatVertexAI  # type: ignore[import-untyped]
+        if not settings.gcp_project_id:
+            raise ValueError("Set GCP_PROJECT_ID in .env to use the vertex provider.")
+        return ChatVertexAI(  # type: ignore[return-value]
+            model_name=settings.gcp_model,
+            project=settings.gcp_project_id,
+            location=settings.gcp_location,
         )
 
     if settings.llm_provider == "gemini":
@@ -94,36 +95,30 @@ def get_llm(settings: Settings | None = None) -> BaseChatModel:
             google_api_key=settings.google_api_key,  # type: ignore[arg-type]
         )
 
-    if settings.llm_provider == "vertexai":
-        try:
-            from langchain_google_vertexai import ChatVertexAI  # type: ignore[import-untyped]
-        except ImportError as exc:
-            raise ImportError(
-                "Vertex AI extras not installed. "
-                "Run: pip install 'clinical-research-agent[vertex]'"
-            ) from exc
-        if not settings.vertex_project_id:
-            raise ValueError(
-                "Vertex client scaffolded — set VERTEX_PROJECT_ID and VERTEX_LOCATION to enable."
-            )
-        return ChatVertexAI(  # type: ignore[return-value]
-            model=settings.vertex_model,
-            project=settings.vertex_project_id,
-            location=settings.vertex_location,
+    if settings.llm_provider == "anthropic":
+        from langchain_anthropic import ChatAnthropic
+        return ChatAnthropic(
+            model=settings.anthropic_model,
+            api_key=settings.anthropic_api_key,  # type: ignore[arg-type]
         )
 
     raise ValueError(f"Unknown LLM provider: {settings.llm_provider!r}")
 
 
 def get_judge_llm(settings: Settings | None = None) -> BaseChatModel:
-    """Return a cheaper model for LLM-as-judge eval calls.
-
-    Uses gemini-1.5-flash (Gemini provider) or claude-haiku (Anthropic).
-    """
+    """Return a cheaper model for LLM-as-judge eval calls."""
     if settings is None:
         settings = get_settings()
 
     judge = settings.effective_judge_model()
+
+    if settings.llm_provider == "vertex":
+        from langchain_google_vertexai import ChatVertexAI  # type: ignore[import-untyped]
+        return ChatVertexAI(  # type: ignore[return-value]
+            model_name=judge,
+            project=settings.gcp_project_id,
+            location=settings.gcp_location,
+        )
 
     if settings.llm_provider == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI  # type: ignore[import-untyped]

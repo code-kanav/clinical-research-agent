@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from langchain_core.messages import HumanMessage
 
-from clinical_research_agent._utils import format_prompt, load_prompt, parse_json_response
+from clinical_research_agent._utils import format_prompt, llm_wait, load_prompt, parse_json_response
 from clinical_research_agent.config import get_llm, get_settings
 from clinical_research_agent.state import ResearchState
 
@@ -31,6 +31,7 @@ def run_planner(state: ResearchState) -> dict:
     llm = get_llm(settings)
     prompt = format_prompt(_get_prompt(), question=state["question"])
 
+    llm_wait()
     response = llm.invoke([HumanMessage(content=prompt)])
     content = str(response.content)
 
