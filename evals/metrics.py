@@ -95,9 +95,15 @@ def compute_faithfulness(
 def estimate_cost(input_tokens: int, output_tokens: int, model: str) -> float:
     """Estimate USD cost based on published model pricing (2025-Q2)."""
     pricing: dict[str, tuple[float, float]] = {
+        # Anthropic
         "claude-sonnet-4-6": (3.0 / 1_000_000, 15.0 / 1_000_000),
         "claude-haiku-4-5-20251001": (0.25 / 1_000_000, 1.25 / 1_000_000),
         "claude-opus-4-7": (15.0 / 1_000_000, 75.0 / 1_000_000),
+        # Gemini on Vertex AI (2025-Q2)
+        "gemini-2.5-flash": (0.15 / 1_000_000, 0.60 / 1_000_000),
+        "gemini-2.5-pro": (1.25 / 1_000_000, 10.0 / 1_000_000),
+        "gemini-2.0-flash": (0.10 / 1_000_000, 0.40 / 1_000_000),
+        "gemini-2.0-flash-001": (0.10 / 1_000_000, 0.40 / 1_000_000),
     }
-    in_rate, out_rate = pricing.get(model, (3.0 / 1_000_000, 15.0 / 1_000_000))
+    in_rate, out_rate = pricing.get(model, (0.15 / 1_000_000, 0.60 / 1_000_000))
     return input_tokens * in_rate + output_tokens * out_rate

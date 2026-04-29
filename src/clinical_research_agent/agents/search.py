@@ -38,13 +38,13 @@ def run_search(state: ResearchState) -> dict:
     else:
         queries = state["sub_queries"]
 
-    if settings.debug:
+    if state.get("debug"):
         cycle = state["refinement_count"] + 1
         print(f"[search] cycle={cycle} running {len(queries)} queries...", flush=True)
 
     new_papers: list[dict] = []
     for sub_query in queries:
-        papers = _react_search(llm, sub_query, settings.debug)
+        papers = _react_search(llm, sub_query, state.get("debug"))
         new_papers.extend(papers)
 
     # Deduplicate new_papers internally, then exclude already-collected IDs/titles.
@@ -57,7 +57,7 @@ def run_search(state: ResearchState) -> dict:
         and (p.get("title") or "").lower().strip() not in existing_titles
     ]
 
-    if settings.debug:
+    if state.get("debug"):
         print(f"[search] fetched={len(new_papers)} fresh={len(fresh)} total_after={len(state['papers']) + len(fresh)}", flush=True)
 
     return {"papers": fresh, "input_tokens": _search_tokens["input"], "output_tokens": _search_tokens["output"]}

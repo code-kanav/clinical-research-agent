@@ -54,6 +54,14 @@ class Settings(BaseSettings):
             return self.judge_model
         return self.gcp_model if self.llm_provider == "vertex" else self.gemini_judge_model
 
+    def active_model(self) -> str:
+        """Return the model name currently in use."""
+        if self.llm_provider == "vertex":
+            return self.gcp_model
+        if self.llm_provider == "gemini":
+            return self.gemini_model
+        return self.anthropic_model
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:

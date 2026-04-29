@@ -27,7 +27,7 @@ def run_critic(state: ResearchState) -> dict:
     settings = get_settings()
     llm = get_llm(settings)
 
-    if settings.debug:
+    if state.get("debug"):
         print(f"[critic] evaluating {len(state['claims'])} claims from {len(state['papers'])} papers...", flush=True)
 
     claims_summary = _summarize_claims(state["claims"])
@@ -55,7 +55,7 @@ def run_critic(state: ResearchState) -> dict:
 
     new_count = state["refinement_count"] + (1 if verdict == "refine" else 0)
 
-    if settings.debug:
+    if state.get("debug"):
         print(f"[critic] verdict={verdict} refinement_count={new_count}/{MAX_REFINEMENTS}", flush=True)
         if data.get("missing_perspectives"):
             print(f"  gaps: {data['missing_perspectives']}", flush=True)

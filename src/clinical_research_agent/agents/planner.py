@@ -25,7 +25,7 @@ def run_planner(state: ResearchState) -> dict:
     Falls back to the original question as a single sub-query on parse failure.
     """
     settings = get_settings()
-    if settings.debug:
+    if state.get("debug"):
         print("[planner] decomposing query...", flush=True)
 
     llm = get_llm(settings)
@@ -42,7 +42,7 @@ def run_planner(state: ResearchState) -> dict:
         sub_queries = [state["question"]]
 
     usage = getattr(response, "usage_metadata", None) or {}
-    if settings.debug:
+    if state.get("debug"):
         print(f"[planner] generated {len(sub_queries)} sub-queries: {sub_queries}", flush=True)
 
     return {

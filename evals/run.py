@@ -82,7 +82,7 @@ def run_question(q: dict, settings: object, skip_faithfulness: bool = False) -> 
             faithfulness=faithfulness,
             input_tokens=itok,
             output_tokens=otok,
-            cost_usd=estimate_cost(itok, otok, settings.anthropic_model),
+            cost_usd=estimate_cost(itok, otok, settings.active_model()),
             latency_seconds=latency,
         )
 
@@ -104,7 +104,7 @@ def _write_results_md(metrics: list[QueryMetrics], settings: object) -> None:
         "# Evaluation Results",
         "",
         f"Run: {now}  ",
-        f"Model: `{settings.anthropic_model}` | Judge: `{settings.judge_model}`",
+        f"Model: `{settings.active_model()}` | Judge: `{settings.effective_judge_model()}`",
         "",
         "| id | question (truncated) | papers | claims | citation_acc | recency_3yr | faithfulness | cost_usd | latency_s | error |",
         "|----|----------------------|:------:|:------:|:------------:|:-----------:|:------------:|:--------:|:---------:|-------|",
@@ -158,7 +158,7 @@ def main() -> None:
             print(f"No question with id={args.question_id!r}")
             sys.exit(1)
 
-    print(f"Running {len(questions)} question(s) | model={settings.anthropic_model} | skip_faithfulness={args.skip_faithfulness}")
+    print(f"Running {len(questions)} question(s) | model={settings.active_model()} | skip_faithfulness={args.skip_faithfulness}")
     print("-" * 70)
 
     all_metrics: list[QueryMetrics] = []

@@ -37,7 +37,7 @@ def run_synthesizer(state: ResearchState) -> dict:
         paper_references=paper_references,
     )
 
-    if settings.debug:
+    if state.get("debug"):
         print(f"[synthesizer] synthesizing from {len(state['claims'])} claims across {len(state['papers'])} papers...", flush=True)
 
     itok = otok = 0
@@ -63,7 +63,7 @@ def run_synthesizer(state: ResearchState) -> dict:
         )
         citations = []
 
-    if settings.debug:
+    if state.get("debug"):
         print(f"[synthesizer] done  review_len={len(review)} citations={len(citations)} tokens={itok}+{otok}", flush=True)
 
     return {"review": review, "citations": citations, "input_tokens": itok, "output_tokens": otok}

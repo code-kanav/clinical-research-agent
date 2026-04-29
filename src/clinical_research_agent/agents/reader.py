@@ -32,22 +32,22 @@ def run_reader(state: ResearchState) -> dict:
     unread = sorted(unread, key=lambda p: p.get("year") or 0, reverse=True)[:MAX_PAPERS]
 
     if not unread:
-        if settings.debug:
+        if state.get("debug"):
             print("[reader] no new papers to read", flush=True)
         return {"claims": [], "input_tokens": 0, "output_tokens": 0}
 
-    if settings.debug:
+    if state.get("debug"):
         print(f"[reader] extracting claims from {len(unread)} papers...", flush=True)
 
     new_claims: list[dict] = []
     total_in = total_out = 0
     for paper in unread:
-        claims, itok, otok = _extract_claims(llm, paper, settings.debug)
+        claims, itok, otok = _extract_claims(llm, paper, state.get("debug"))
         new_claims.extend(claims)
         total_in += itok
         total_out += otok
 
-    if settings.debug:
+    if state.get("debug"):
         print(f"[reader] done  papers={len(unread)} claims={len(new_claims)} tokens={total_in}+{total_out}", flush=True)
 
     return {"claims": new_claims, "input_tokens": total_in, "output_tokens": total_out}
