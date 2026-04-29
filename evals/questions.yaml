@@ -1,0 +1,120 @@
+# 10 hand-curated clinical questions for evaluation.
+# expected_themes: topics the review must cover to be considered faithful.
+# expected_sources: journals/publishers that should appear in citations.
+#
+# Full eval harness built in Session 4.
+
+questions:
+  - id: q01
+    question: "What is the current evidence on GLP-1 agonists for non-diabetic weight management?"
+    expected_themes:
+      - weight loss efficacy
+      - semaglutide or liraglutide
+      - cardiovascular outcomes
+      - adverse effects
+    expected_sources:
+      - NEJM
+      - Lancet
+      - JAMA
+
+  - id: q02
+    question: "What does recent evidence say about SGLT2 inhibitors in heart failure with preserved ejection fraction?"
+    expected_themes:
+      - HFpEF
+      - empagliflozin or dapagliflozin
+      - hospitalization reduction
+      - EMPEROR-Preserved or DELIVER trial
+    expected_sources:
+      - NEJM
+      - ESC
+
+  - id: q03
+    question: "Is there evidence supporting low-dose aspirin for primary prevention of cardiovascular disease post-2018?"
+    expected_themes:
+      - ASPREE trial
+      - bleeding risk
+      - net clinical benefit
+      - age stratification
+    expected_sources:
+      - NEJM
+      - Annals of Internal Medicine
+
+  - id: q04
+    question: "What is the evidence base for continuous glucose monitoring in non-insulin-dependent type 2 diabetes?"
+    expected_themes:
+      - HbA1c reduction
+      - time in range
+      - patient satisfaction
+      - cost-effectiveness
+    expected_sources:
+      - Diabetes Care
+      - JAMA
+
+  - id: q05
+    question: "What are the current evidence-based recommendations for duration of dual antiplatelet therapy after PCI?"
+    expected_themes:
+      - bleeding vs ischemic risk tradeoff
+      - ticagrelor or clopidogrel
+      - DAPT score
+      - stent type considerations
+    expected_sources:
+      - JACC
+      - EHJ
+      - Circulation
+
+  - id: q06
+    question: "Does melatonin supplementation improve sleep outcomes in older adults with insomnia?"
+    expected_themes:
+      - sleep latency
+      - sleep quality measures
+      - dosing
+      - comparison to benzodiazepines
+    expected_sources:
+      - Sleep Medicine
+      - JAGS
+
+  - id: q07
+    question: "What is the evidence for proton pump inhibitor de-escalation strategies in long-term users?"
+    expected_themes:
+      - tapering vs abrupt cessation
+      - rebound acid hypersecretion
+      - fracture risk
+      - C. difficile
+    expected_sources:
+      - Gut
+      - American Journal of Gastroenterology
+
+  - id: q08
+    question: "What does the evidence say about the efficacy of psilocybin-assisted therapy for treatment-resistant depression?"
+    expected_themes:
+      - response and remission rates
+      - COMPASS Pathways trial
+      - safety profile
+      - comparison to standard antidepressants
+    expected_sources:
+      - NEJM
+      - Nature Medicine
+      - Lancet Psychiatry
+
+  - id: q09
+    question: "What is the current evidence on tofacitinib and other JAK inhibitors for rheumatoid arthritis compared to biologics?"
+    expected_themes:
+      - ORAL Surveillance study
+      - cardiovascular risk signal
+      - efficacy vs TNF inhibitors
+      - regulatory response
+    expected_sources:
+      - NEJM
+      - Annals of Rheumatic Diseases
+
+  - id: q10
+    question: "What is the evidence for high-flow nasal cannula oxygen versus non-invasive ventilation in acute hypoxemic respiratory failure?"
+    expected_themes:
+      - intubation rates
+      - FLORALI trial
+      - patient comfort
+      - COVID-19 context
+    expected_sources:
+      - Intensive Care Medicine
+      - NEJM
+      - Critical Care

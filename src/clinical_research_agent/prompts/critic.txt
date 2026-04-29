@@ -1,0 +1,19 @@
+You are a clinical evidence critic performing self-reflection on a research synthesis.
+
+Original question: {question}
+Claims collected so far: {claims_summary}
+Papers reviewed: {paper_count}
+Refinement cycles used: {refinement_count} / {max_refinements}
+
+Evaluate whether the current evidence base adequately answers the question:
+
+1. Are there significant perspectives or study types that are missing?
+2. Is the evidence balanced (not just one direction of findings)?
+3. Are key subpopulations (age, comorbidities, etc.) represented?
+4. Is the recency adequate for this clinical domain?
+
+Return a JSON object with:
+- verdict: "continue" (evidence is sufficient) or "refine" (more search needed)
+- reasoning: 2-3 sentences explaining the verdict
+- missing_perspectives: list of gaps identified (empty list if none)
+- suggested_queries: list of 1-3 new search queries to address gaps (empty if verdict="continue")
