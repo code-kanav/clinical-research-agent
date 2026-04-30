@@ -32,7 +32,7 @@ from evals.metrics import (
 )
 
 _QUESTIONS_FILE = Path(__file__).parent / "questions.yaml"
-_RESULTS_FILE = Path(__file__).parent / "results.md"
+_RESULTS_FILE = Path(__file__).parent.parent / "result.md"
 
 
 def _initial_state(question: str) -> dict:
@@ -74,6 +74,7 @@ def run_question(q: dict, settings: object, skip_faithfulness: bool = False) -> 
                 settings.anthropic_api_key,
             )
 
+        citations = list(result.get("citations") or [])
         return QueryMetrics(
             question_id=q["id"],
             question=q["question"],
@@ -86,6 +87,8 @@ def run_question(q: dict, settings: object, skip_faithfulness: bool = False) -> 
             output_tokens=otok,
             cost_usd=estimate_cost(itok, otok, settings.active_model()),
             latency_seconds=latency,
+            review=review,
+            citations=citations,
         )
 
     except Exception as exc:
@@ -136,6 +139,25 @@ def _write_results_md(metrics: list[QueryMetrics], settings: object) -> None:
             f"- Total cost: ${total_cost:.4f}",
         ]
 
+    # Full review text for each successful question
+    lines += ["", "---", "", "## Literature Reviews"]
+    for m in metrics:
+        lines += [
+            "",
+            f"### [{m.question_id}] {m.question}",
+            "",
+        ]
+        if m.error:
+            lines.append(f"**Error:** {m.error}")
+        elif m.review:
+            lines.append(m.review)
+            if m.citations:
+                lines += ["", "**References**", ""]
+                for c in m.citations:
+                    lines.append(f"- {c}")
+        else:
+            lines.append("_No review generated._")
+
     _RESULTS_FILE.write_text("\n".join(lines) + "\n")
     print(f"Results written to {_RESULTS_FILE}")
 
@@ -165,13 +187,14 @@ def main() -> None:
 
     all_metrics: list[QueryMetrics] = []
     for q in questions:
-        print(f"[{q['id']}] {q['question'][:65]}")
+        print(f"[{q['id']}] {q['question'][:65]}", flush=True)
         m = run_question(q, settings, skip_faithfulness=args.skip_faithfulness)
         all_metrics.append(m)
         status = f"  → papers={m.papers_found} claims={m.claims_found} faith={m.faithfulness:.2f} cost=${m.cost_usd:.4f} lat={m.latency_seconds:.1f}s"
         if m.error:
             status = f"  → ERROR: {m.error[:60]}"
-        print(status)
+        print(status, flush=True)
+        _write_results_md(all_metrics, settings)  # incremental: survive process kill
 
     _write_results_md(all_metrics, settings)
 

@@ -6,7 +6,7 @@ from clinical_research_agent._utils import format_prompt, llm_wait, load_prompt,
 from clinical_research_agent.config import get_llm, get_settings
 from clinical_research_agent.state import ResearchState
 
-MAX_REFINEMENTS = 3
+MAX_REFINEMENTS = 2
 
 _prompt_template: str | None = None
 

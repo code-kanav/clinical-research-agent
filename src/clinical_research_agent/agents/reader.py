@@ -6,7 +6,7 @@ from clinical_research_agent._utils import format_prompt, llm_wait, load_prompt,
 from clinical_research_agent.config import get_llm, get_settings
 from clinical_research_agent.state import ResearchState
 
-MAX_PAPERS = 5  # cap LLM calls: 1 per paper
+MAX_PAPERS = 2  # cap LLM calls: 1 per paper
 
 _prompt_template: str | None = None
 

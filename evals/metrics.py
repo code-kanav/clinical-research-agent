@@ -20,6 +20,8 @@ class QueryMetrics:
     latency_seconds: float = 0.0
     error: Optional[str] = None
     timestamp: datetime = field(default_factory=datetime.utcnow)
+    review: str = ""
+    citations: list = field(default_factory=list)
 
 
 def compute_citation_accuracy(papers: list[dict]) -> float:
